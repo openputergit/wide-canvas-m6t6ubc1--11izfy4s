@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Time Predictor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f9ff;
+        }
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 3px solid #3498db;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100">
+    <div class="container mx-auto px-4 py-8 max-w-2xl">
+        <div class="bg-white rounded-xl shadow-lg p-6 md:p-8">
+            <h1 class="text-3xl font-bold text-blue-900 mb-6 text-center">Task Time Predictor</h1>
+            
+            <div class="space-y-6">
+                <div class="worker-inputs">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Number of Workers:</label>
+                    <input type="number" id="workerCount" min="1" value="1" 
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                </div>
+
+                <div id="efficiencyInputs" class="space-y-4">
+                    <!-- Worker efficiency inputs will be generated here -->
+                </div>
+
+                <button onclick="calculateTime()" 
+                        class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition duration-200 flex items-center justify-center">
+                    <span>Calculate Time</span>
+                    <div class="loader ml-3" id="loader"></div>
+                </button>
+
+                <div id="result" class="hidden mt-6 p-4 bg-blue-50 rounded-lg">
+                    <h3 class="text-lg font-semibold text-blue-900 mb-2">Prediction Result:</h3>
+                    <p id="timeResult" class="text-gray-700"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentWorkers = 1;
+
+        // Initialize with one worker
+        updateWorkerInputs(1);
+
+        // Listen for changes in worker count
+        document.getElementById('workerCount').addEventListener('input', function(e) {
+            const count = parseInt(e.target.value) || 1;
+            updateWorkerInputs(count);
+        });
+
+        function updateWorkerInputs(count) {
+            const container = document.getElementById('efficiencyInputs');
+            container.innerHTML = '';
+            
+            for (let i = 1; i <= count; i++) {
+                const div = document.createElement('div');
+                div.innerHTML = `
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Worker ${i} Efficiency (%):</label>
+                    <input type="number" class="efficiency-input w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                           min="1" max="100" value="100">
+                `;
+                container.appendChild(div);
+            }
+            currentWorkers = count;
+        }
+
+        function calculateTime() {
+            const loader = document.getElementById('loader');
+            const result = document.getElementById('result');
+            const timeResult = document.getElementById('timeResult');
+            
+            // Show loader
+            loader.style.display = 'block';
+            result.classList.add('hidden');
+
+            // Get all efficiency values
+            const efficiencies = Array.from(document.querySelectorAll('.efficiency-input'))
+                                    .map(input => parseFloat(input.value) / 100);
+
+            // Validate inputs
+            if (efficiencies.some(e => isNaN(e) || e <= 0 || e > 1)) {
+                alert('Please enter valid efficiency values between 1 and 100');
+                loader.style.display = 'none';
+                return;
+            }
+
+            // Simulate API call delay
+            setTimeout(() => {
+                // Calculate total efficiency using chain rule
+                const totalEfficiency = efficiencies.reduce((sum, efficiency) => sum + efficiency, 0);
+                
+                // Calculate time (assuming base time is 1 hour)
+                const baseTime = 1; // 1 hour
+                const predictedTime = baseTime / totalEfficiency;
+
+                // Format the result
+                const hours = Math.floor(predictedTime);
+                const minutes = Math.round((predictedTime - hours) * 60);
+
+                // Display result
+                result.classList.remove('hidden');
+                timeResult.textContent = `Based on the combined efficiency, the task will take approximately ${hours} hour${hours !== 1 ? 's' : ''} and ${minutes} minute${minutes !== 1 ? 's' : ''} to complete.`;
+                
+                // Hide loader
+                loader.style.display = 'none';
+            }, 1000);
+        }
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
